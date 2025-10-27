@@ -2,8 +2,9 @@ import os
 
 # Configuración JWT
 SECRET_KEY = os.getenv(
-    "SECRET_KEY", "tu_clave_secreta_muy_segura_aqui"
-)  # En producción, usar variable de entorno
+    "SECRET_KEY",
+    "iFvAUetgimBt--457VIznYLDCvRicORitmcRSak37dCGeQiVo6J3AUvrXONd6gqT-w17oPLYuDH1UDGBYAM7NQ",
+)
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 REFRESH_TOKEN_EXPIRE_DAYS = 7

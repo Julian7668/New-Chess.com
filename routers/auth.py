@@ -8,7 +8,7 @@ from constants.modelos import (
     UsuarioActualizar,
     CambiarPassword,
 )
-from auth.hash_password import hash_password, verify_password
+from auth import hash_password, verify_password
 from auth.jwt_handler import (
     create_access_token,
     create_refresh_token,
