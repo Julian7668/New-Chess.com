@@ -20,6 +20,8 @@ from .modelos import (
     InscripcionDB,
     PartidaDB,
     RatingDB,
+    UsuarioActualizar,
+    CambiarPassword,
 )
 
 
@@ -43,4 +45,6 @@ __all__ = [
     "InscripcionDB",
     "PartidaDB",
     "RatingDB",
+    "UsuarioActualizar",
+    "CambiarPassword",
 ]

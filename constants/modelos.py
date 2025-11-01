@@ -17,7 +17,7 @@ class UsuarioBase(BaseModel):
     rol: str = Field(default=ROLES["jugador"])
 
     @validator("rol")
-    def validar_rol(cls, v):
+    def validar_rol(self, v):
         if v not in ROLES.values():
             raise ValueError(f"Rol debe ser uno de: {list(ROLES.values())}")
         return v
@@ -89,7 +89,7 @@ class TorneoBase(BaseModel):
     estado: str = Field(default=ESTADOS_TORNEO["abierto"])
 
     @validator("formato")
-    def validar_formato(cls, v):
+    def validar_formato(self, v):
         if v not in FORMATOS_TORNEO.values():
             raise ValueError(
                 f"Formato debe ser uno de: {list(FORMATOS_TORNEO.values())}"
@@ -97,13 +97,13 @@ class TorneoBase(BaseModel):
         return v
 
     @validator("estado")
-    def validar_estado(cls, v):
+    def validar_estado(self, v):
         if v not in ESTADOS_TORNEO.values():
             raise ValueError(f"Estado debe ser uno de: {list(ESTADOS_TORNEO.values())}")
         return v
 
     @validator("fecha_fin")
-    def validar_fechas(cls, v, values):
+    def validar_fechas(self, v, values):
         if v and "fecha_inicio" in values and v <= values["fecha_inicio"]:
             raise ValueError("La fecha de fin debe ser posterior a la fecha de inicio")
         return v
@@ -141,7 +141,7 @@ class TorneoActualizar(BaseModel):
     estado: Optional[str] = None
 
     @validator("formato")
-    def validar_formato(cls, v):
+    def validar_formato(self, v):
         if v and v not in FORMATOS_TORNEO.values():
             raise ValueError(
                 f"Formato debe ser uno de: {list(FORMATOS_TORNEO.values())}"
@@ -149,7 +149,7 @@ class TorneoActualizar(BaseModel):
         return v
 
     @validator("estado")
-    def validar_estado(cls, v):
+    def validar_estado(self, v):
         if v and v not in ESTADOS_TORNEO.values():
             raise ValueError(f"Estado debe ser uno de: {list(ESTADOS_TORNEO.values())}")
         return v
@@ -190,7 +190,7 @@ class PartidaBase(BaseModel):
     resultado: Optional[str] = None
 
     @validator("resultado")
-    def validar_resultado(cls, v):
+    def validar_resultado(self, v):
         if v and v not in RESULTADOS_PARTIDA.values():
             raise ValueError(
                 f"Resultado debe ser uno de: {list(RESULTADOS_PARTIDA.values())}"
@@ -222,7 +222,7 @@ class PartidaActualizarResultado(BaseModel):
     resultado: str
 
     @validator("resultado")
-    def validar_resultado(cls, v):
+    def validar_resultado(self, v):
         if v not in RESULTADOS_PARTIDA.values():
             raise ValueError(
                 f"Resultado debe ser uno de: {list(RESULTADOS_PARTIDA.values())}"

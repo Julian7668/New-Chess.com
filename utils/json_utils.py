@@ -62,11 +62,16 @@ def save_usuario(usuario: UsuarioDB):
 
 def update_usuario(user_id: int, updates: dict[str, Any]):
     """Actualiza un usuario con los datos proporcionados."""
-    usuarios = load_json(USUARIOS_FILE)
-    for i, u in enumerate(usuarios):
-        if u["id"] == user_id:
-            usuarios[i].update(updates)
-            save_json(USUARIOS_FILE, usuarios)
+    try:
+        usuarios = load_json(USUARIOS_FILE)
+        for i, u in enumerate(usuarios):
+            if u["id"] == user_id:
+                usuarios[i].update(updates)
+                save_json(USUARIOS_FILE, usuarios)
+    except Exception as e:
+        print(f"Error al actualizar usuario: {e}")
+        return False
+    return True
 
 
 # Funciones para torneos

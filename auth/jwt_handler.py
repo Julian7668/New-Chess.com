@@ -1,5 +1,5 @@
 from datetime import datetime, timedelta, timezone
-from typing import Optional, cast
+from typing import Optional, cast, Literal
 from jose import JWTError, jwt
 from constants import (
     SECRET_KEY,
@@ -49,7 +49,9 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
 
 
-def verify_token(token: str, token_type: str = "access") -> Optional[TokenData]:
+def verify_token(
+    token: str, token_type: Literal["access", "refresh"] = "access"
+) -> Optional[TokenData]:
     """
     Verifica y decodifica un token JWT.
 
@@ -71,32 +73,9 @@ def verify_token(token: str, token_type: str = "access") -> Optional[TokenData]:
         email = cast(str, payload.get("email"))
         rol = cast(str, payload.get("rol"))
 
-        if user_id is None or email is None or rol is None:
+        if None in (user_id, email, rol):
             return None
 
         return TokenData(user_id=user_id, email=email, rol=rol)
     except JWTError:
         return None
-
-
-def refresh_access_token(refresh_token: str) -> Optional[str]:
-    """
-    Crea un nuevo token de acceso usando un refresh token.
-
-    Args:
-        refresh_token: El token de refresh
-
-    Returns:
-        Nuevo token de acceso si el refresh token es válido, None en caso contrario
-    """
-    token_data = verify_token(refresh_token, "refresh")
-    if token_data is None:
-        return None
-
-    # Crear nuevo access token con los mismos datos
-    access_token_data = {
-        "user_id": token_data.user_id,
-        "email": token_data.email,
-        "rol": token_data.rol,
-    }
-    return create_access_token(access_token_data)

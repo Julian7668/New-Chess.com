@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status, Depends
-from datetime import datetime
-from constants.modelos import (
+from datetime import datetime, timezone
+from constants import (
     UsuarioCrear,
     UsuarioRespuesta,
     LoginRequest,
@@ -8,14 +8,15 @@ from constants.modelos import (
     UsuarioActualizar,
     CambiarPassword,
 )
-from auth import hash_password, verify_password
-from auth.jwt_handler import (
+from auth import (
+    get_current_user,
+    hash_password,
+    verify_password,
     create_access_token,
     create_refresh_token,
-    refresh_access_token,
+    verify_token,
 )
-from auth.dependencies import get_current_user
-from utils.json_utils import (
+from utils import (
     get_usuario_by_email,
     get_next_usuario_id,
     save_usuario,
@@ -58,7 +59,7 @@ async def register(usuario_data: UsuarioCrear):
         apellido=usuario_data.apellido,
         rol=usuario_data.rol,
         password_hash=hashed_password,
-        fecha_creacion=datetime.utcnow(),
+        fecha_creacion=datetime.now(timezone.utc),
         activo=True,
     )
 
@@ -119,24 +120,31 @@ async def login(login_data: LoginRequest):
 async def refresh_token_endpoint(refresh_token: str):
     """
     Refresca el token de acceso usando un refresh token válido.
+    Genera un nuevo par de tokens (access + refresh) para extender la sesión.
 
     - **refresh_token**: Token de refresh
     """
-    access_token = refresh_access_token(refresh_token)
-    if access_token is None:
+    # Verificar el refresh token viejo
+    token_data = verify_token(refresh_token, "refresh")
+
+    if token_data is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token inválido o expirado",
         )
 
-    # Necesitamos obtener el refresh token original para crear uno nuevo
-    # En una implementación real, guardaríamos los refresh tokens en una base de datos
-    # Por simplicidad, creamos un nuevo par de tokens
-    # Esto no es ideal en producción, pero funciona para el ejemplo
+    # Crear datos para los nuevos tokens
+    new_token_data = {
+        "user_id": token_data.user_id,
+        "email": token_data.email,
+        "rol": token_data.rol,
+    }
 
-    # Para este ejemplo, devolveremos solo el nuevo access token
-    # En producción, deberías invalidar el refresh token usado y crear uno nuevo
-    return Token(access_token=access_token, refresh_token=refresh_token)
+    # Crear tokens NUEVOS (incluyendo nuevo refresh)
+    new_access = create_access_token(new_token_data)
+    new_refresh = create_refresh_token(new_token_data)
+
+    return Token(access_token=new_access, refresh_token=new_refresh)
 
 
 @router.get("/me", response_model=UsuarioRespuesta)
@@ -177,7 +185,7 @@ async def update_profile(
         updates["email"] = user_updates.email
 
     if updates:
-        updates["fecha_actualizacion"] = datetime.utcnow()
+        updates["fecha_actualizacion"] = datetime.now(timezone.utc)
         success = update_usuario(current_user.id, updates)
         if not success:
             raise HTTPException(
@@ -186,9 +194,9 @@ async def update_profile(
 
     # Retornar usuario actualizado
     updated_user = (
-        get_usuario_by_email(current_user.email)
-        if not user_updates.email
-        else get_usuario_by_email(user_updates.email)
+        get_usuario_by_email(user_updates.email)
+        if user_updates.email
+        else get_usuario_by_email(current_user.email)
     )
     if updated_user:
         return UsuarioRespuesta(
@@ -251,11 +259,10 @@ async def change_password(
     # Actualizar contraseña
     updates = {
         "password_hash": new_hashed_password,
-        "fecha_actualizacion": datetime.utcnow(),
+        "fecha_actualizacion": datetime.now(timezone.utc),
     }
 
-    success = update_usuario(current_user.id, updates)
-    if not success:
+    if not update_usuario(current_user.id, updates):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Error al actualizar contraseña",
