@@ -1,9 +1,9 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from auth.jwt_handler import verify_token
-from utils.json_utils import get_usuario_by_id
-from constants import TokenData, UsuarioRespuesta
-from constants import ROLES
+
+from auth import verify_token
+from utils import get_usuario_by_id
+from constants import TokenData, UsuarioRespuesta, ROLES
 
 # Esquema de seguridad para Bearer tokens
 security = HTTPBearer()
